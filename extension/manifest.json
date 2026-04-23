@@ -1,0 +1,48 @@
+{
+  "manifest_version": 3,
+  "name": "Nexvia Novia",
+  "version": "0.1.0",
+  "description": "Nexvia support helpers for targeted websites (private/internal).",
+  "action": {
+    "default_title": "Nexvia Novia"
+  },
+  "permissions": [
+    "storage",
+    "clipboardWrite"
+  ],
+  "host_permissions": [
+    "https://*.immotop.lu/*",
+    "https://pro.immotop.lu/*",
+    "https://*.athome.lu/*",
+    "https://*.wortimmo.lu/*"
+  ],
+  "background": {
+    "service_worker": "src/background/service-worker.js",
+    "type": "module"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://*.immotop.lu/*",
+        "https://*.athome.lu/*",
+        "https://*.wortimmo.lu/*"
+      ],
+      "js": [
+        "src/ui/overlay.js",
+        "src/content/listing-find-helper.js"
+      ],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": [
+        "https://pro.immotop.lu/my-listings/*"
+      ],
+      "js": [
+        "src/ui/overlay.js",
+        "src/content/listing-page-format-command.js"
+      ],
+      "run_at": "document_idle"
+    }
+  ]
+}
+
