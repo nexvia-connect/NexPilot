@@ -1,0 +1,295 @@
+/* Easy Listing Creator — inside NexPilot nn-card; uses --nn-* tokens from overlay theme */
+.elch-lc-scroller {
+  --elch-fs: 13px;
+  --elch-fs-sm: 11px;
+  --elch-fs-xs: 10px;
+  --elch-lh: 1.45;
+  width: 100%;
+  max-width: 100%;
+  min-height: 0;
+  max-height: min(72vh, 680px);
+  font-family: var(--nn-font, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif);
+  font-size: var(--elch-fs);
+  line-height: var(--elch-lh);
+  color: var(--nn-text, #eaeaea);
+  box-sizing: border-box;
+  border-radius: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  /* Allows <details> height to interpolate where supported (e.g. Chromium 131+). */
+  interpolate-size: allow-size;
+}
+
+.elch-title {
+  margin: 0 0 2px;
+  padding: 6px 2px 8px;
+  border-bottom: 1px solid var(--nn-border, #333);
+  font-size: 14px;
+  font-weight: 650;
+  letter-spacing: 0.4px;
+  color: var(--nn-text, #eaeaea);
+}
+.elch-title a {
+  line-height: 0;
+  margin-right: 6px;
+  vertical-align: middle;
+}
+.elch-pipedrive-icon {
+  width: 18px;
+  height: 18px;
+  vertical-align: middle;
+  border-radius: 4px;
+}
+
+.elch-sections {
+  padding: 2px 0 4px;
+}
+.elch-section {
+  border-bottom: 1px solid var(--nn-border, #333);
+  interpolate-size: allow-size;
+}
+.elch-section:last-of-type {
+  border-bottom: none;
+}
+.elch-section > summary {
+  list-style: none;
+  padding: 6px 2px 6px 0;
+  font-weight: 650;
+  font-size: 12px;
+  letter-spacing: 0.25px;
+  line-height: 1.3;
+  color: var(--nn-text-dim, #a3a3a3);
+  cursor: pointer;
+  user-select: none;
+  transition:
+    color 0.2s ease,
+    background-color 0.2s ease,
+    border-radius 0.2s ease,
+    box-shadow 0.2s ease;
+}
+.elch-section > summary::-webkit-details-marker {
+  display: none;
+}
+.elch-section > summary::before {
+  content: "▶";
+  display: inline-block;
+  width: 12px;
+  margin-right: 4px;
+  font-size: 0.6em;
+  line-height: 1.2;
+  color: var(--nn-text-dim, #a3a3a3);
+  vertical-align: 0.1em;
+  transform: rotate(0deg);
+  transform-origin: 45% 50%;
+  transition: transform 0.22s cubic-bezier(0.22, 1, 0.36, 1), color 0.2s ease, opacity 0.2s ease;
+  opacity: 0.92;
+}
+.elch-section[open] > summary::before {
+  color: var(--nn-green-2, #10a37f);
+  transform: rotate(90deg);
+}
+.elch-section[open] > summary {
+  color: var(--nn-text, #eaeaea);
+  background: rgba(16, 163, 127, 0.08);
+  border-radius: var(--nn-radius-sm, 10px);
+  margin: 0 -2px;
+  padding-left: 2px;
+  padding-right: 2px;
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.2);
+}
+
+/* Open/close the native <details> body with a quick height transition (Chromium+). */
+@supports (selector(::details-content)) {
+  .elch-section::details-content {
+    transition:
+      block-size 0.2s cubic-bezier(0.22, 1, 0.36, 1),
+      opacity 0.16s ease;
+    overflow: hidden;
+  }
+}
+
+/* Browsers without animatable “details” box: one quick open fade. */
+@supports not (selector(::details-content)) {
+  .elch-section-panel {
+    min-height: 0;
+  }
+  .elch-section[open] > .elch-section-panel > .elch-section-panel-inner {
+    animation: elchSectionReveal 0.2s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+  @keyframes elchSectionReveal {
+    from {
+      opacity: 0.86;
+      transform: translateY(-2px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+}
+
+/* Panel wrapper for min-height: 0 in grid / flex contexts (future-proofing). */
+.elch-section-panel {
+  min-height: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .elch-lc-scroller {
+    interpolate-size: auto;
+  }
+  .elch-section > summary,
+  .elch-section > summary::before {
+    transition: none;
+  }
+  .elch-section[open] > .elch-section-panel > .elch-section-panel-inner {
+    animation: none;
+  }
+  @supports (selector(::details-content)) {
+    .elch-section::details-content {
+      transition: none;
+    }
+  }
+}
+
+.elch-entry {
+  display: flex;
+  gap: 10px;
+  padding: 4px 2px 6px 0;
+  align-items: flex-start;
+  font-size: var(--elch-fs);
+  line-height: var(--elch-lh);
+}
+.elch-entry > div:first-child {
+  flex: 0 0 35%;
+  max-width: 42%;
+  min-width: 0;
+  font-size: var(--elch-fs-sm);
+  font-weight: 500;
+  color: var(--nn-text-dim, #a3a3a3);
+  line-height: 1.35;
+  word-break: break-word;
+}
+.elch-entry > div:last-child {
+  flex: 1;
+  min-width: 0;
+  font-size: var(--elch-fs);
+  color: var(--nn-text, #eaeaea);
+  line-height: var(--elch-lh);
+  word-break: break-word;
+}
+.elch-value {
+  word-break: break-word;
+}
+
+/* Original userscript: .copy, .fetch-txt, .material-icons (Material+Icons in shadow) */
+.elch-lc-scroller .copy,
+.elch-lc-scroller .fetch-txt {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: rgba(100, 181, 246, 0.95);
+  user-select: none;
+  border-radius: 4px;
+  border: 1px solid transparent;
+  vertical-align: middle;
+  margin-left: 4px;
+  flex: 0 0 auto;
+}
+.elch-lc-scroller .copy:hover,
+.elch-lc-scroller .fetch-txt:hover {
+  color: var(--nn-text, #fff);
+  background: rgba(100, 181, 246, 0.12);
+  border-color: rgba(100, 181, 246, 0.28);
+}
+.elch-lc-scroller .material-icons {
+  font-size: 16px;
+  line-height: 1;
+  vertical-align: middle;
+}
+
+/* Compact “open” & download actions — same ethos as .nn-btn */
+button.elch-download,
+a .elch-download,
+.elch-download {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 32px;
+  margin-top: 0;
+  padding: 0 10px;
+  font-family: var(--nn-font, inherit);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.28px;
+  line-height: 1;
+  text-decoration: none;
+  color: var(--nn-text, #eaeaea) !important;
+  border: 1px solid #555;
+  background: #333;
+  border-radius: var(--nn-radius-sm, 10px);
+  cursor: pointer;
+  box-sizing: border-box;
+  transition: background 0.18s ease, border-color 0.18s ease, color 0.18s ease;
+}
+.elch-download:hover,
+a .elch-download:hover {
+  border-color: #666;
+  background: #3b3b3b;
+  color: var(--nn-text, #fff) !important;
+}
+.elch-download:focus-visible,
+a .elch-download:focus-visible {
+  outline: 2px solid var(--nn-green-2, #10a37f);
+  outline-offset: 1px;
+}
+
+a .elch-download {
+  text-decoration: none;
+}
+
+.elch-toast {
+  position: absolute;
+  top: -24px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 11px;
+  line-height: 1.2;
+  font-weight: 650;
+  padding: 4px 7px;
+  border-radius: 6px;
+  background: #111;
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 120ms ease, transform 120ms ease;
+  white-space: nowrap;
+  z-index: 1;
+  font-family: var(--nn-font, inherit);
+}
+/* “Copied!”: fixed in #nn-overlay (JS) so it layers above <details> summaries, scrollers, etc. */
+.elch-toast.elch-toast--overlay {
+  position: fixed;
+  z-index: calc(var(--nn-z, 2147483000) + 50);
+  top: auto;
+  left: auto;
+  transform: none;
+}
+.elch-toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(-1px);
+}
+.elch-toast.elch-toast--overlay.show {
+  /* top/left/transform: inline in showCopyToast; opacity only (inline beats .elch-toast.show transform) */
+  opacity: 1;
+}
+@keyframes elch-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}

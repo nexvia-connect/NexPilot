@@ -1,0 +1,409 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>NexPilot</title>
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <div class="card" id="cardRoot">
+      <div class="header" id="mainHeader">
+        <div class="header-left">
+          <div class="brand brand-nexpilot" aria-label="NexPilot">
+            <span class="brand-hex" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="16" height="16" focusable="false">
+                <path fill="currentColor" d="M19.79 16.5L12 21l-7.79-4.5V7.5L12 3l7.79 4.5v9z" />
+              </svg>
+            </span>
+            <span class="brand-text">NexPilot</span>
+          </div>
+          <div class="header-titles">
+            <div class="title" id="rootTitle">Assist</div>
+            <div class="subtitle" id="rootSubtitle">Active workflows and actions</div>
+          </div>
+        </div>
+      </div>
+      <div id="popupContentStack" class="popup-content-stack">
+        <div id="mainShell">
+        <div id="nexpilotTabbar" class="tabbar" data-active="assist" role="tablist" aria-label="NexPilot">
+          <span class="tabbar-indicator" aria-hidden="true"></span>
+          <button id="tabAssist" class="tab is-active" type="button" role="tab" aria-selected="true">
+            <span class="tab-icon" aria-hidden="true"
+              ><svg
+                class="tab-icon-svg"
+                viewBox="0 0 24 24"
+                width="20"
+                height="20"
+                focusable="false"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.75"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path
+                  d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2z"
+                />
+              </svg>
+            </span>
+            <span class="tab-label">Assist</span>
+          </button>
+          <button id="tabEnhancements" class="tab" type="button" role="tab" aria-selected="false">
+            <span class="tab-icon" aria-hidden="true"
+              ><svg
+                class="tab-icon-svg"
+                viewBox="0 0 24 24"
+                width="20"
+                height="20"
+                focusable="false"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.75"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <line x1="4" y1="21" x2="4" y2="14" />
+                <line x1="4" y1="10" x2="4" y2="3" />
+                <line x1="12" y1="21" x2="12" y2="12" />
+                <line x1="12" y1="8" x2="12" y2="3" />
+                <line x1="20" y1="21" x2="20" y2="16" />
+                <line x1="20" y1="12" x2="20" y2="3" />
+                <line x1="1" y1="14" x2="7" y2="14" />
+                <line x1="9" y1="8" x2="15" y2="8" />
+                <line x1="17" y1="16" x2="23" y2="16" />
+              </svg>
+            </span>
+            <span class="tab-label">Enhance</span>
+          </button>
+          <button id="tabSettings" class="tab" type="button" role="tab" aria-selected="false">
+            <span class="tab-icon" aria-hidden="true"
+              ><svg
+                class="tab-icon-svg"
+                viewBox="0 0 24 24"
+                width="20"
+                height="20"
+                focusable="false"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path
+                  d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"
+                />
+                <circle cx="12" cy="12" r="3" />
+              </svg>
+            </span>
+            <span class="tab-label">Settings</span>
+          </button>
+        </div>
+        <div class="body" id="mainBody">
+          <div id="panelAssist" class="tabpanel" role="tabpanel">
+            <div id="tools" class="tools"></div>
+          </div>
+          <div id="panelEnhancements" class="tabpanel" role="tabpanel" hidden>
+            <div id="cleaners" class="tools"></div>
+          </div>
+          <div id="panelSettings" class="tabpanel tabpanel--settings" role="tabpanel" hidden>
+            <div class="settings-stack">
+              <section class="settings-section" aria-label="Engine">
+                <h3 class="settings-section-kicker">Engine</h3>
+                <div class="settings-block tool">
+                  <label class="settings-compact-row" for="npMasterTools">
+                    <span class="settings-item-title">Enable tools</span>
+                    <span class="switch">
+                      <input type="checkbox" id="npMasterTools" />
+                      <span class="pill" aria-hidden="true"></span>
+                    </span>
+                  </label>
+                </div>
+                <div class="settings-block tool">
+                  <div class="settings-compact-row" role="group" aria-label="Reset tool toggles">
+                    <span class="settings-item-title" id="npResetToolsLabel">Reset all tools to default</span>
+                    <button
+                      type="button"
+                      class="btn danger settings-reset-btn"
+                      id="npResetAllTools"
+                      aria-labelledby="npResetToolsLabel"
+                    >
+                      Reset
+                    </button>
+                  </div>
+                </div>
+                <div class="settings-block tool">
+                  <div
+                    class="settings-compact-row settings-compact-row--tight settings-compact-row--autoupdate"
+                    role="group"
+                    aria-label="Autoupdate and manual check"
+                  >
+                    <span class="settings-item-title" id="npAutoupdateLabel">Autoupdate NexPilot</span>
+                    <div class="settings-autoupdate-actions">
+                      <div class="settings-check-updates-slot">
+                        <button
+                          type="button"
+                          class="btn settings-check-updates-btn"
+                          id="npCheckUpdates"
+                          title="Ask Chrome if an update is available"
+                          aria-label="Check for extension updates"
+                        >
+                          Check for updates
+                        </button>
+                      </div>
+                      <label class="settings-compact-swatch switch" for="npAutoupdate">
+                        <input
+                          type="checkbox"
+                          id="npAutoupdate"
+                          checked
+                          disabled
+                          aria-labelledby="npAutoupdateLabel"
+                          title="Chrome updates the extension in the background; a toggle will appear here if you can turn that off later."
+                        />
+                        <span class="pill" aria-hidden="true"></span>
+                      </label>
+                    </div>
+                  </div>
+                </div>
+              </section>
+              <section class="settings-section" aria-label="Interface">
+                <h3 class="settings-section-kicker">Interface</h3>
+                <div class="settings-block tool">
+                  <div class="settings-compact-row" role="group" aria-label="Open this popup on">
+                    <span class="settings-item-title" id="npPopupStartLabel">Open this popup on</span>
+                    <select
+                      id="npPopupStartTab"
+                      class="settings-select--inline"
+                      aria-labelledby="npPopupStartLabel"
+                    >
+                      <option value="last">Last tab I was on</option>
+                      <option value="assist">Assist</option>
+                      <option value="enhancements">Enhance</option>
+                      <option value="settings">Settings</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="settings-block tool">
+                  <div class="settings-compact-row settings-compact-row--tight">
+                    <span class="settings-item-title" id="npDarkModeLabel">Dark mode</span>
+                    <label class="settings-compact-swatch switch" for="npDarkMode">
+                      <input
+                        type="checkbox"
+                        id="npDarkMode"
+                        checked
+                        disabled
+                        aria-labelledby="npDarkModeLabel"
+                        title="Only dark mode for now; light option may come later."
+                      />
+                      <span class="pill" aria-hidden="true"></span>
+                    </label>
+                  </div>
+                </div>
+              </section>
+              <div
+                class="settings-version"
+                id="npVersionBox"
+                role="contentinfo"
+                aria-label="NexPilot version"
+              >
+                <div class="settings-version-inner">
+                  <span class="settings-version-label">NexPilot extension</span>
+                  <span class="settings-version-num" id="npVersionText">—</span>
+                </div>
+                <div class="settings-update" id="npUpdateBlock">
+                  <p class="settings-update-msg" id="npUpdateMsg" hidden></p>
+                  <div class="settings-update-actions">
+                    <button type="button" class="btn" id="npReloadForUpdate" hidden aria-label="Reload extension to apply update">
+                      Reload to update
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div id="easyCleanerOptions" class="subview" hidden>
+        <div class="subview-header">
+          <button type="button" class="back-btn" id="easyOptsBack" aria-label="Back">
+            <span class="back-chevron" aria-hidden="true"></span>
+          </button>
+          <div class="subview-titles">
+            <div class="subview-kicker" id="easyOptsKicker">Options</div>
+            <div class="subview-title" id="easyOptsTitle">Easy Cleaner</div>
+          </div>
+        </div>
+        <div class="subview-body">
+          <div class="subview-block" id="easyCleanerEditBlock">
+            <h3 class="subview-block-title" id="easyEditShowHideHeading">On-page show &amp; hide</h3>
+            <p class="subview-block-desc" id="easyEditShowHideDesc">
+              Puts the Easy page into edit mode: tap +/− on each field, then
+              <strong>Confirm</strong> in the page bar, or <strong>Apply &amp; exit</strong> here. The
+              main button’s label always matches the current step.
+            </p>
+            <div class="subview-btn-pair">
+              <button
+                type="button"
+                class="btn"
+                id="easyOptsEditShowHide"
+                aria-pressed="false"
+              >
+                Start editing
+              </button>
+              <button
+                type="button"
+                class="btn subview-btn-secondary"
+                id="easyOptsShowPaths"
+                aria-expanded="false"
+                aria-controls="easyOptsPathsPanel"
+              >
+                Show paths
+              </button>
+            </div>
+          </div>
+
+          <div class="subview-paths-panel" id="easyOptsPathsPanel" hidden>
+            <label class="subview-label" for="easyOptsTextarea"
+              >Hidden element paths (one per line)</label
+            >
+            <p class="subview-paths-caveat">
+              Power user: these long internal paths are edited here or via +/− on the page; most people
+              don’t need to open this.
+            </p>
+            <textarea
+              id="easyOptsTextarea"
+              class="subview-textarea"
+              rows="9"
+              spellcheck="false"
+              autocomplete="off"
+              wrap="off"
+              placeholder="Loaded from the active Easy tab…"
+            ></textarea>
+          </div>
+
+          <div class="subview-hint" id="easyOptsHint" hidden></div>
+          <div class="subview-actions">
+            <button type="button" class="btn primary" id="easyOptsSave">Save</button>
+            <button type="button" class="btn" id="easyOptsClose">Close</button>
+            <button type="button" class="btn danger" id="easyOptsReset">Reset to defaults</button>
+          </div>
+        </div>
+      </div>
+      <div id="agentChipOptions" class="subview" hidden>
+        <div class="subview-header">
+          <button type="button" class="back-btn" id="agentOptsBack" aria-label="Back">
+            <span class="back-chevron" aria-hidden="true"></span>
+          </button>
+          <div class="subview-titles">
+            <div class="subview-kicker">Options</div>
+            <div class="subview-title">Agent Chip</div>
+          </div>
+        </div>
+        <div class="subview-body">
+          <label class="subview-label" for="agentPillSizeRange"
+            >Adviser pill size (diameter in pixels)</label
+          >
+          <div class="subview-row">
+            <input
+              type="range"
+              id="agentPillSizeRange"
+              class="subview-range"
+              min="32"
+              max="96"
+              step="2"
+              value="48"
+            />
+            <output class="subview-range-value" id="agentPillSizeValue" for="agentPillSizeRange"
+              >48</output
+            >
+            <span class="subview-range-unit">px</span>
+          </div>
+          <p class="subview-help">
+            Changes apply on open Nexvia buy or rent pages; saved in sync so it follows you across devices.
+          </p>
+          <div class="subview-hint" id="agentOptsHint" hidden></div>
+          <div class="subview-actions">
+            <button type="button" class="btn primary" id="agentOptsSave">Save</button>
+            <button type="button" class="btn" id="agentOptsClose">Close</button>
+            <button type="button" class="btn danger" id="agentOptsReset">Reset to default</button>
+          </div>
+        </div>
+      </div>
+      <div id="easyRefInsertOptions" class="subview" hidden>
+        <div class="subview-header">
+          <button type="button" class="back-btn" id="easyRefOptsBack" aria-label="Back">
+            <span class="back-chevron" aria-hidden="true"></span>
+          </button>
+          <div class="subview-titles">
+            <div class="subview-kicker">Options</div>
+            <div class="subview-title">Easy Description Helper</div>
+          </div>
+        </div>
+        <div class="subview-body">
+          <ul class="subview-toggle-list" role="list">
+            <li class="subview-toggle-item">
+              <div class="subview-toggle-text">
+                <div class="subview-toggle-name">Autofill listing URL in description</div>
+                <div class="subview-toggle-desc">Updates the “Notre annonce complète” / “Our full listing” line to use the current ref ID.</div>
+              </div>
+              <label class="switch" for="easyRefChkUrl" title="On by default">
+                <input type="checkbox" id="easyRefChkUrl" data-easyref-key="option.easyRefInsert.urlInDescription" />
+                <span class="pill" aria-hidden="true"></span>
+              </label>
+            </li>
+            <li class="subview-toggle-item">
+              <div class="subview-toggle-text">
+                <div class="subview-toggle-name">En/em dashes → hyphens</div>
+                <div class="subview-toggle-desc">Replaces – — ― and similar with a standard hyphen in the long text field.</div>
+              </div>
+              <label class="switch" for="easyRefChkDash" title="On by default">
+                <input type="checkbox" id="easyRefChkDash" data-easyref-key="option.easyRefInsert.dashToHyphen" />
+                <span class="pill" aria-hidden="true"></span>
+              </label>
+            </li>
+          </ul>
+          <div class="subview-actions subview-actions--tight">
+            <button type="button" class="btn" id="easyRefOptsClose">Close</button>
+          </div>
+        </div>
+      </div>
+      <div id="listingCreatorOptions" class="subview" hidden>
+        <div class="subview-header">
+          <button type="button" class="back-btn" id="listingOptsBack" aria-label="Back">
+            <span class="back-chevron" aria-hidden="true"></span>
+          </button>
+          <div class="subview-titles">
+            <div class="subview-kicker">Options</div>
+            <div class="subview-title">Easy Listing Creator</div>
+          </div>
+        </div>
+        <div class="subview-body">
+          <p class="subview-block-desc subview-block-desc--tight">
+            Power-user bypass: load or clear the JSON the on-page <strong>Listing creation</strong> tool uses. Use a
+            shared Trello link for the normal path; this is for pasting or fixing raw data.
+          </p>
+          <label class="subview-label" for="listingOptsTextarea">Listing data (JSON)</label>
+          <textarea
+            id="listingOptsTextarea"
+            class="subview-textarea"
+            rows="12"
+            spellcheck="false"
+            autocomplete="off"
+            wrap="off"
+            placeholder="{} or paste a full object…"
+          ></textarea>
+          <div class="subview-hint" id="listingOptsHint" hidden></div>
+          <div class="subview-actions">
+            <button type="button" class="btn primary" id="listingOptsApply">Load into page</button>
+            <button type="button" class="btn" id="listingOptsClose">Close</button>
+            <button type="button" class="btn danger" id="listingOptsReset">Clear all</button>
+          </div>
+        </div>
+      </div>
+      </div>
+      <div id="popupStatus" class="popup-status" hidden></div>
+    </div>
+    <script src="popup.js"></script>
+  </body>
+</html>
+

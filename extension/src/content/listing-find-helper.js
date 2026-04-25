@@ -1,9 +1,20 @@
-(function () {
+(async function () {
   "use strict";
 
   // Prevent double-injection
   if (window.nnListingFindLoaded) return;
   window.nnListingFindLoaded = true;
+
+  const TOOL_KEY = "tool.listingFindHelper";
+  let enabled = true;
+  try {
+    enabled = self.__npToolEnabled
+      ? await self.__npToolEnabled(TOOL_KEY, true)
+      : (await chrome.storage.sync.get({ [TOOL_KEY]: true }))[TOOL_KEY];
+  } catch {
+    // if storage fails, default to enabled
+  }
+  if (!enabled) return;
 
   let findId = null;
 
@@ -23,15 +34,16 @@
     const queryParams = searchStr.replace("?", "").split("&").filter(Boolean);
     const findParam = queryParams.find((param) => param.startsWith("find="));
 
-    if (findParam) {
-      findId = findParam.split("=")[1];
-      sessionStorage.setItem("immotop_find_id", findId);
-      return;
-    }
-
+    // If we're in upgrade/downgrade mode, force-disable find mode for this tab.
     if (queryParams.some((p) => p.startsWith("upgrade=") || p.startsWith("downgrade="))) {
       sessionStorage.removeItem("immotop_find_id");
       findId = null;
+      return;
+    }
+
+    if (findParam) {
+      findId = findParam.split("=")[1];
+      sessionStorage.setItem("immotop_find_id", findId);
       return;
     }
 
@@ -40,7 +52,7 @@
   }
 
   function wireCopyButton({ buttonEl, tooltipEl, url }) {
-    const icons = window.NexviaNoviaUI?.icons?.() || {};
+    const icons = window.NexPilotUI?.icons?.() || {};
     const setCopied = () => {
       buttonEl.style.background = "#2e7d32";
       buttonEl.style.borderColor = "#2e7d32";
@@ -61,7 +73,7 @@
         .then(setCopied)
         .catch((err) => {
           // eslint-disable-next-line no-console
-          console.warn("[Nexvia Novia] Clipboard blocked until user gesture.", err);
+          console.warn("[NexPilot] Clipboard blocked until user gesture.", err);
         });
     };
 
@@ -70,24 +82,21 @@
   }
 
   async function createPopup(url, imgSrc) {
-    if (!window.NexviaNoviaUI?.createCard) return;
+    if (!window.NexPilotUI?.createCard) return;
 
-    const card = await window.NexviaNoviaUI.createCard({
+    const card = await window.NexPilotUI.createCard({
       id: "listing-find-popup",
-      title: "Listing Found",
+      title: "Listing Finder",
       width: 420,
       anchor: "center"
     });
 
     // If it already existed, don't rebuild contents
-    const body = window.NexviaNoviaUI.getBody(card);
+    const body = window.NexPilotUI.getBody(card);
     if (body.dataset.nnInit === "true") return;
     body.dataset.nnInit = "true";
 
-    card.querySelector("[data-nn-close]")?.addEventListener("click", () => {
-      findId = null;
-      sessionStorage.removeItem("immotop_find_id");
-    });
+    // Close/minimize is handled by shared UI (NexPilot pill). Do not clear state here.
 
     body.innerHTML = `
       ${imgSrc ? `<img class="nn-img" src="${imgSrc}" alt="Listing image" />` : ""}
@@ -95,7 +104,7 @@
         <input class="nn-input" type="text" readonly value="${url}" />
         <div style="position:relative; width:38px; flex: 0 0 38px;">
           <div class="nn-tooltip" data-nn-tooltip>Copied!</div>
-          <button class="nn-btn" data-nn-copy title="Copy to clipboard">${window.NexviaNoviaUI.icons().copy}</button>
+          <button class="nn-btn" data-nn-copy title="Copy to clipboard">${window.NexPilotUI.icons().copy}</button>
         </div>
       </div>
     `;

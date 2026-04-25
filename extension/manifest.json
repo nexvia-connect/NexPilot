@@ -1,26 +1,59 @@
 {
   "manifest_version": 3,
-  "name": "Nexvia Novia",
+  "name": "NexPilot",
   "version": "0.1.0",
-  "description": "Nexvia support helpers for targeted websites (private/internal).",
+  "description": "NexPilot — support helpers for Nexvia workflows on targeted sites (private/internal).",
   "action": {
-    "default_title": "Nexvia Novia"
+    "default_title": "NexPilot",
+    "default_popup": "src/popup/popup.html"
   },
   "permissions": [
     "storage",
-    "clipboardWrite"
+    "clipboardWrite",
+    "tabs"
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["src/assist/easy-listing-creator-helper.css"],
+      "matches": ["https://nexvia1832.easy-serveur53.com/*"]
+    }
   ],
   "host_permissions": [
     "https://*.immotop.lu/*",
     "https://pro.immotop.lu/*",
     "https://*.athome.lu/*",
-    "https://*.wortimmo.lu/*"
+    "https://*.wortimmo.lu/*",
+    "https://www.nexvia.lu/*",
+    "https://*.easy-serveur53.com/*",
+    "https://fonts.googleapis.com/*",
+    "https://nexvia-connect.github.io/*",
+    "https://*.s3.amazonaws.com/*",
+    "https://*.facebook.com/*",
+    "https://facebook.com/*"
   ],
   "background": {
     "service_worker": "src/background/service-worker.js",
     "type": "module"
   },
+  "commands": {
+    "nn-reload-extension": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+R",
+        "mac": "Command+Shift+R"
+      },
+      "description": "Reload NexPilot (dev helper)"
+    }
+  },
   "content_scripts": [
+    {
+      "matches": ["https://nexvia1832.easy-serveur53.com/*"],
+      "js": [
+        "src/lib/np-tools-master-gate.js",
+        "src/ui/overlay.js",
+        "src/assist/easy-listing-creator-helper.js"
+      ],
+      "run_at": "document_idle"
+    },
     {
       "matches": [
         "https://*.immotop.lu/*",
@@ -28,6 +61,7 @@
         "https://*.wortimmo.lu/*"
       ],
       "js": [
+        "src/lib/np-tools-master-gate.js",
         "src/ui/overlay.js",
         "src/content/listing-find-helper.js"
       ],
@@ -38,8 +72,43 @@
         "https://pro.immotop.lu/my-listings/*"
       ],
       "js": [
+        "src/lib/np-tools-master-gate.js",
         "src/ui/overlay.js",
         "src/content/listing-page-format-command.js"
+      ],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": [
+        "https://www.nexvia.lu/buy*",
+        "https://www.nexvia.lu/rent*"
+      ],
+      "js": [
+        "src/lib/np-tools-master-gate.js",
+        "src/content/add-agent-to-nexvia-site.js"
+      ],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": [
+        "https://*.easy-serveur53.com/*"
+      ],
+      "js": [
+        "src/lib/np-tools-master-gate.js",
+        "src/cleaners/easy-ui-cleaner.js",
+        "src/cleaners/easy-photo-upgrader.js",
+        "src/cleaners/easy-ref-insert.js"
+      ],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": [
+        "https://*.facebook.com/*",
+        "https://facebook.com/*"
+      ],
+      "js": [
+        "src/lib/np-tools-master-gate.js",
+        "src/enhancements/continuous-ad-budget-warn.js"
       ],
       "run_at": "document_idle"
     }
