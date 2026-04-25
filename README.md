@@ -21,14 +21,6 @@ NexPilot injects small helpers on specific websites (Imm otop / AtHome / Wortimm
 - `extension/src/ui/`: shared UI (Shadow DOM overlay + `NexPilotUI` global)
 - Toolbar icon is drawn in code: white **hex** on Nexvia blue, plus a count when tools are active
 
-## Shipping privately
-
-Recommended options (pick one):
-
-- **Google Admin (Managed Chrome)**: publish privately to your Workspace org (best for company-wide).
-- **Self-hosted CRX**: internal distribution for a smaller team (more manual).
-- **Developer mode**: for internal testers only.
-
 ## Notes
 
 - The in-page UI uses a Shadow DOM “overlay” so site CSS does not break our popups, and our styles do not leak onto host pages.
