@@ -1,6 +1,6 @@
 # NexPilot (Chrome Extension)
 
-Private, company-internal Chrome extension for **Nexvia** support workflows. (You can rename the Git remote/repo to e.g. `nexpilot` to match; the on-disk folder name is independent.)
+Private, company-internal Chrome extension for **Nexvia** support workflows.
 
 ## What this is
 
