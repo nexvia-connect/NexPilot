@@ -49,15 +49,80 @@
     return Math.max(6, Math.round(12 * (pillSizePx / 48)));
   }
 
+  let resizeRelayoutWired = false;
+  function ensureGlobalPillRelayoutOnResize() {
+    if (resizeRelayoutWired) return;
+    resizeRelayoutWired = true;
+    window.addEventListener("resize", () => {
+      requestAnimationFrame(() => {
+        document.querySelectorAll(".nn-agent-contact-circle").forEach((el) => {
+          const wrap = el.closest(".listings-item-wrapper");
+          if (wrap) layoutPillInWrapper(wrap, el);
+        });
+      });
+    });
+  }
+
+  /**
+   * Top/left of el’s border box relative to ancestor’s padding edge, using the offsetParent
+   * chain (layout box only — excludes CSS transform on el). Needed because modern cards
+   * scale `.listings-item-header` on hover; getBoundingClientRect + ResizeObserver on the
+   * header would fight the transition and jitter the pill.
+   */
+  function layoutOffsetFromAncestor(el, ancestor) {
+    if (!el || !ancestor) {
+      return null;
+    }
+    let top = 0;
+    let left = 0;
+    let n = el;
+    while (n && n !== ancestor) {
+      top += n.offsetTop;
+      left += n.offsetLeft;
+      n = n.offsetParent;
+    }
+    return n === ancestor ? { top, left } : null;
+  }
+
+  function layoutPillInWrapper(wrapper, container) {
+    const header = wrapper.querySelector(".listings-item-header");
+    if (!header || !container) return;
+    const wr = wrapper.getBoundingClientRect();
+    if (wr.width < 1 || header.offsetHeight < 1) return;
+    const inset = pillInsetPx();
+    const size = pillSizePx;
+
+    const hOff = layoutOffsetFromAncestor(header, wrapper);
+    let top;
+    let right;
+    if (hOff) {
+      top = hOff.top + header.offsetHeight - size - inset;
+      right = wrapper.clientWidth - (hOff.left + header.offsetWidth) + inset;
+    } else {
+      const hr = header.getBoundingClientRect();
+      top = hr.bottom - wr.top - size - inset;
+      right = wr.right - hr.right + inset;
+    }
+    container.style.top = `${Math.max(0, top)}px`;
+    container.style.right = `${Math.max(0, right)}px`;
+    container.style.bottom = "auto";
+    container.style.left = "auto";
+  }
+
   function applyPillSizeToPage() {
     const w = pillSizePx;
     const b = pillBorderPx();
-    const inset = pillInsetPx();
     document.querySelectorAll(".nn-agent-contact-circle").forEach((el) => {
       el.style.width = `${w}px`;
       el.style.height = `${w}px`;
-      el.style.bottom = `${inset}px`;
-      el.style.right = `${inset}px`;
+      const wrap = el.closest(".listings-item-wrapper");
+      if (wrap) {
+        layoutPillInWrapper(wrap, el);
+      } else {
+        const inset = pillInsetPx();
+        el.style.bottom = `${inset}px`;
+        el.style.right = `${inset}px`;
+      }
       const ring = el.querySelector(".nn-agent-pill-ring");
       if (ring) {
         ring.style.border = `${b}px solid #fff`;
@@ -153,22 +218,25 @@
   }
 
   function injectPortrait(wrapper, imgSrc, email) {
+    if (wrapper.querySelector(".nn-agent-contact-circle")) return;
     const header = wrapper.querySelector(".listings-item-header");
-    if (!header || header.querySelector(".nn-agent-contact-circle")) return;
+    if (!header) return;
 
     const w = pillSizePx;
     const b = pillBorderPx();
-    const inset = pillInsetPx();
+
+    const cs = getComputedStyle(wrapper);
+    if (cs.position === "static") {
+      wrapper.style.position = "relative";
+    }
 
     const container = document.createElement("div");
     container.className = "nn-agent-contact-circle";
     container.style.cssText = `
       position: absolute;
-      bottom: ${inset}px;
-      right: ${inset}px;
       width: ${w}px;
       height: ${w}px;
-      z-index: 5;
+      z-index: 30;
       cursor: pointer;
     `;
 
@@ -213,8 +281,26 @@
       }
     };
 
-    header.style.position = "relative";
-    header.appendChild(container);
+    wrapper.appendChild(container);
+
+    let relayoutRaf = 0;
+    const scheduleRelayout = () => {
+      if (relayoutRaf) {
+        cancelAnimationFrame(relayoutRaf);
+      }
+      relayoutRaf = requestAnimationFrame(() => {
+        relayoutRaf = 0;
+        layoutPillInWrapper(wrapper, container);
+      });
+    };
+    scheduleRelayout();
+    requestAnimationFrame(scheduleRelayout);
+
+    if (typeof ResizeObserver !== "undefined") {
+      const ro = new ResizeObserver(() => scheduleRelayout());
+      ro.observe(wrapper);
+    }
+    ensureGlobalPillRelayoutOnResize();
 
     container.addEventListener("click", (e) => {
       e.preventDefault();

@@ -22,22 +22,49 @@ const ASSIST = [
     desc: "Helping hand to build a listing",
     hasOptions: true,
     hasEdit: false
+  },
+  {
+    id: "continuousAdBudgetWarning",
+    key: "tool.continuousAdBudgetWarning",
+    name: "Meta Adcheck",
+    desc: "Facebook: Payment summary warn, red highlight, Publish",
+    hasOptions: true,
+    hasEdit: false
   }
 ];
 
-const ENHANCEMENTS = [
+const NEXVIA_ENHANCEMENTS = [
   {
     id: "agentChip",
     key: "tool.addAgentToNexviaSite",
     name: "Agent Chip",
-    desc: "Adds the agent pill to listings",
+    desc: "Adds the agent contact pill to listings",
     hasOptions: true,
     hasEdit: false
   },
   {
+    id: "advancedNexviaFilters",
+    key: "tool.advancedNexviaFilters",
+    name: "Advanced Filters",
+    desc: "Modern filters; optional map view (options)",
+    hasOptions: true,
+    hasEdit: false
+  },
+  {
+    id: "modernPropertyCards",
+    key: "tool.modernPropertyCards",
+    name: "Modern Cards",
+    desc: "Improved property cards with preview features",
+    hasOptions: false,
+    hasEdit: false
+  }
+];
+
+const OTHER_ENHANCEMENTS = [
+  {
     id: "easyCleaner",
     key: "tool.easyUiCleanerV321",
-    name: "Easy Cleaner",
+    name: "Interface Cleaner",
     desc: "Cleans up Easy for easier navigation",
     hasOptions: true,
     hasEdit: false
@@ -45,7 +72,7 @@ const ENHANCEMENTS = [
   {
     id: "easyPhotoUpgrader",
     key: "tool.easyPhotoUpgrader",
-    name: "Easy Photo Upgrader",
+    name: "Photo Upgrader",
     desc: "Resizes photo cards and flags images that are not 3:2",
     hasOptions: false,
     hasEdit: false
@@ -53,20 +80,30 @@ const ENHANCEMENTS = [
   {
     id: "easyReferenceInsert",
     key: "tool.easyReferenceInsert",
-    name: "Easy Description Helper",
+    name: "Description Helper",
     desc: "Autofills listing URL in description and small text corrections",
     hasOptions: true,
     hasEdit: false
-  },
-  {
-    id: "continuousAdBudgetWarning",
-    key: "tool.continuousAdBudgetWarning",
-    name: "Meta Adcheck",
-    desc: "Stop Zuckerberg & Meta thieves from overcharging ads",
-    hasOptions: false,
-    hasEdit: false
   }
 ];
+
+const ALL_ENHANCEMENTS = NEXVIA_ENHANCEMENTS.concat(OTHER_ENHANCEMENTS);
+
+/** Sub-option of Advanced Filters; list/map on buy search (`nexvia-map-view.js`). */
+const NEXVIA_MAP_VIEW_OPTION_KEY = "tool.nexviaMapView";
+/** Advanced Filters: show the sort dropdown on Nexvia listings. */
+const ENABLE_NEXVIA_SORTING_KEY = "option.advancedNexviaFilters.enableSorting";
+/** Map view: 0–100, merges nearby pins on screen (see `nexvia-map-view.js`). */
+const MAP_CLUSTER_FLEX_KEY = "option.nexviaMapView.clusterFlexibility";
+const MAP_CLUSTER_FLEX_DEFAULT = 20;
+
+function isPopupToggleTool(tool) {
+  return (
+    ASSIST.some((t) => t.key === tool.key) ||
+    NEXVIA_ENHANCEMENTS.some((t) => t.key === tool.key) ||
+    OTHER_ENHANCEMENTS.some((t) => t.key === tool.key)
+  );
+}
 
 function el(tag, attrs = {}, children = []) {
   const node = document.createElement(tag);
@@ -144,12 +181,8 @@ async function getActiveTab() {
   return tabs[0] || null;
 }
 
-function isEnhancementTool(tool) {
-  return ENHANCEMENTS.some((t) => t.key === tool.key);
-}
-
 function isToolRelevantOnPage(tool, pageUrl) {
-  if (!pageUrl) return true;
+  if (!pageUrl) return false;
   if (tool.id === "listingFinder") {
     return /immotop\.lu|athome\.lu|wortimmo\.lu/i.test(pageUrl);
   }
@@ -159,8 +192,12 @@ function isToolRelevantOnPage(tool, pageUrl) {
   if (tool.id === "listingCreator") {
     return /nexvia1832\.easy-serveur53\.com/i.test(pageUrl);
   }
-  if (tool.id === "agentChip") {
-    return /https:\/\/www\.nexvia\.lu\/(buy|rent)/i.test(pageUrl);
+  if (
+    tool.id === "agentChip" ||
+    tool.id === "advancedNexviaFilters" ||
+    tool.id === "modernPropertyCards"
+  ) {
+    return /https:\/\/www\.nexvia\.lu\/(?:[\w-]+\/)?(buy|rent)/i.test(pageUrl);
   }
   if (tool.id === "easyCleaner" || tool.id === "easyPhotoUpgrader" || tool.id === "easyReferenceInsert") {
     return /easy-serveur53\.com/i.test(pageUrl);
@@ -168,13 +205,16 @@ function isToolRelevantOnPage(tool, pageUrl) {
   if (tool.id === "continuousAdBudgetWarning") {
     return /facebook\.com/i.test(pageUrl);
   }
-  return true;
+  return false;
 }
 
 async function getToolStates() {
   const defaults = Object.fromEntries(
-    ASSIST.map((t) => [t.key, true]).concat(ENHANCEMENTS.map((t) => [t.key, true]))
+    ASSIST.map((t) => [t.key, true]).concat(ALL_ENHANCEMENTS.map((t) => [t.key, true]))
   );
+  defaults[NEXVIA_MAP_VIEW_OPTION_KEY] = true;
+  defaults[ENABLE_NEXVIA_SORTING_KEY] = true;
+  defaults[MAP_CLUSTER_FLEX_KEY] = MAP_CLUSTER_FLEX_DEFAULT;
   const res = await chrome.storage.sync.get({ ...defaults, [NP_TOOLS_MASTER_KEY]: true });
   return res;
 }
@@ -206,12 +246,20 @@ const NP_POPUP_LAST_TAB_KEY = "nn.popupLastTab";
  */
 const NP_POPUP_START_KEY = "nn.popupStartTab";
 
+/** Legacy “enhancements” tab id stored in sync → Nexvia.lu (`nexvia-enhance`). */
+function canonicalizeMainTab(tab) {
+  if (tab === "enhancements") return "nexvia-enhance";
+  return tab;
+}
+
 function isValidLastTab(tab) {
-  return tab === "assist" || tab === "enhancements" || tab === "settings";
+  const t = canonicalizeMainTab(tab);
+  return t === "assist" || t === "nexvia-enhance" || t === "web-enhance" || t === "settings";
 }
 
 function isValidOpenPref(v) {
-  return v === "last" || isValidLastTab(v);
+  if (v === "last") return true;
+  return isValidLastTab(v);
 }
 
 let popupHeightSyncQueued = false;
@@ -233,10 +281,12 @@ function getMainBodyInnerContentWidth() {
 function applyTabPanelVisibleState() {
   const d = document.getElementById("nexpilotTabbar")?.getAttribute("data-active") || "assist";
   const pa = document.getElementById("panelAssist");
-  const pe = document.getElementById("panelEnhancements");
+  const pn = document.getElementById("panelNexviaEnhance");
+  const pw = document.getElementById("panelWebEnhance");
   const ps = document.getElementById("panelSettings");
   if (pa) pa.hidden = d !== "assist";
-  if (pe) pe.hidden = d !== "enhancements";
+  if (pn) pn.hidden = d !== "nexvia-enhance";
+  if (pw) pw.hidden = d !== "web-enhance";
   if (ps) ps.hidden = d !== "settings";
 }
 
@@ -298,9 +348,11 @@ function buildDefaultToolSyncPayload() {
   for (const t of ASSIST) {
     out[t.key] = true;
   }
-  for (const t of ENHANCEMENTS) {
+  for (const t of ALL_ENHANCEMENTS) {
     out[t.key] = true;
   }
+  out[NEXVIA_MAP_VIEW_OPTION_KEY] = true;
+  out[ENABLE_NEXVIA_SORTING_KEY] = true;
   return out;
 }
 
@@ -333,9 +385,17 @@ async function easyCleanerSend(tabId, action, extra = {}) {
 const SUBVIEW_PANEL = {
   easy: "easyCleanerOptions",
   agent: "agentChipOptions",
+  advFilters: "advancedNexviaFiltersOptions",
   ref: "easyRefInsertOptions",
-  listing: "listingCreatorOptions"
+  listing: "listingCreatorOptions",
+  meta: "metaAdcheckOptions"
 };
+
+const CABW_SUPPRESS_KEY = "option.continuousAdBudget.suppressIfPageContains";
+const CABW_HIDE_PUBLISH_KEY = "option.continuousAdBudget.hidePublishButton";
+const CABW_HIGHLIGHT_KEY = "option.continuousAdBudget.highlightRedIfPageContains";
+const CABW_SUPPRESS_DEFAULT = "Your ad will run continuously.";
+const CABW_HIGHLIGHT_DEFAULT = "Run ad continuously";
 
 function shouldAnimateSubviewPanel() {
   if (typeof matchMedia === "function" && matchMedia("(prefers-reduced-motion: reduce)").matches) {
@@ -377,7 +437,7 @@ function runWhenSubviewAnimDone(el, expectedName, onEnd) {
 
 /**
  * Show a tool options subview over the tab+body (swipe in from the right); hide + swipe out to the right.
- * @param {"easy"|"agent"|"ref"|"listing"} which
+ * @param {"easy"|"agent"|"advFilters"|"ref"|"listing"|"meta"} which
  * @param {boolean} open
  * @param {{ animate?: boolean }} [opts] Defaults to animate: true. Use false to swap panels instantly.
  */
@@ -453,6 +513,14 @@ function setListingCreatorOptionsOpen(open, opts) {
 
 function setEasyRefInsertOptionsOpen(open, opts) {
   setSubviewState("ref", open, opts);
+}
+
+function setMetaAdcheckOptionsOpen(open, opts) {
+  setSubviewState("meta", open, opts);
+}
+
+function setAdvancedNexviaFiltersOptionsOpen(open, opts) {
+  setSubviewState("advFilters", open, opts);
 }
 
 function setEasyPathsPanelOpen(open) {
@@ -672,6 +740,129 @@ function initAgentOptionsPanel() {
   });
 }
 
+/** Empty = Meta Adcheck does nothing on Facebook. */
+function normalizeMetaAdSuppress(raw) {
+  return String(raw ?? "").trim().slice(0, 280);
+}
+
+let metaAdcheckOptionsInited = false;
+
+function initMetaAdcheckOptionsPanel() {
+  if (metaAdcheckOptionsInited) return;
+  metaAdcheckOptionsInited = true;
+
+  const back = document.getElementById("metaAdOptsBack");
+  const close = document.getElementById("metaAdOptsClose");
+  const save = document.getElementById("metaAdOptsSave");
+  const reset = document.getElementById("metaAdOptsReset");
+  const suppressInp = document.getElementById("metaAdSuppressText");
+  const highlightInp = document.getElementById("metaAdHighlightText");
+  const hidePublishChk = document.getElementById("metaAdHidePublishChk");
+  const hint = document.getElementById("metaAdOptsHint");
+
+  const hideHint = () => {
+    if (hint) {
+      hint.textContent = "";
+      hint.hidden = true;
+    }
+  };
+
+  const goBack = () => {
+    hideHint();
+    setMetaAdcheckOptionsOpen(false, { animate: true });
+    setStatus("");
+  };
+
+  back?.addEventListener("click", goBack);
+  close?.addEventListener("click", goBack);
+
+  hidePublishChk?.addEventListener("change", async () => {
+    hideHint();
+    setStatus("");
+    try {
+      await chrome.storage.sync.set({
+        [CABW_HIDE_PUBLISH_KEY]: Boolean(hidePublishChk.checked)
+      });
+      setStatus("Saved.");
+    } catch {
+      setStatus("Couldn’t save.");
+    }
+  });
+
+  save?.addEventListener("click", async () => {
+    hideHint();
+    setStatus("");
+    const suppressText = normalizeMetaAdSuppress(suppressInp?.value ?? "");
+    const highlightText = normalizeMetaAdSuppress(highlightInp?.value ?? "");
+    const hidePublish = Boolean(hidePublishChk?.checked);
+    if (suppressInp) suppressInp.value = suppressText;
+    if (highlightInp) highlightInp.value = highlightText;
+    try {
+      await chrome.storage.sync.set({
+        [CABW_SUPPRESS_KEY]: suppressText,
+        [CABW_HIGHLIGHT_KEY]: highlightText,
+        [CABW_HIDE_PUBLISH_KEY]: hidePublish
+      });
+      setStatus("Saved.");
+      setMetaAdcheckOptionsOpen(false, { animate: true });
+    } catch {
+      setStatus("Couldn’t save options.");
+    }
+  });
+
+  reset?.addEventListener("click", async () => {
+    hideHint();
+    if (
+      !window.confirm("Reset Meta Adcheck to defaults?")
+    ) {
+      return;
+    }
+    setStatus("");
+    try {
+      await chrome.storage.sync.set({
+        [CABW_SUPPRESS_KEY]: CABW_SUPPRESS_DEFAULT,
+        [CABW_HIGHLIGHT_KEY]: CABW_HIGHLIGHT_DEFAULT,
+        [CABW_HIDE_PUBLISH_KEY]: true
+      });
+      if (suppressInp) suppressInp.value = CABW_SUPPRESS_DEFAULT;
+      if (highlightInp) highlightInp.value = CABW_HIGHLIGHT_DEFAULT;
+      if (hidePublishChk) hidePublishChk.checked = true;
+      setStatus("Reset.");
+      setMetaAdcheckOptionsOpen(false, { animate: true });
+    } catch {
+      setStatus("Couldn’t reset options.");
+    }
+  });
+}
+
+async function openMetaAdcheckOptionsFromCog() {
+  setStatus("");
+  initMetaAdcheckOptionsPanel();
+  const suppressInp = document.getElementById("metaAdSuppressText");
+  const highlightInp = document.getElementById("metaAdHighlightText");
+  const hidePublishChk = document.getElementById("metaAdHidePublishChk");
+  const hint = document.getElementById("metaAdOptsHint");
+  if (hint) {
+    hint.textContent = "";
+    hint.hidden = true;
+  }
+  try {
+    const res = await chrome.storage.sync.get({
+      [CABW_SUPPRESS_KEY]: CABW_SUPPRESS_DEFAULT,
+      [CABW_HIGHLIGHT_KEY]: CABW_HIGHLIGHT_DEFAULT,
+      [CABW_HIDE_PUBLISH_KEY]: true
+    });
+    const suppressText = normalizeMetaAdSuppress(res[CABW_SUPPRESS_KEY]);
+    const highlightText = normalizeMetaAdSuppress(res[CABW_HIGHLIGHT_KEY]);
+    if (suppressInp) suppressInp.value = suppressText;
+    if (highlightInp) highlightInp.value = highlightText;
+    if (hidePublishChk) hidePublishChk.checked = res[CABW_HIDE_PUBLISH_KEY] !== false;
+    setMetaAdcheckOptionsOpen(true, { animate: true });
+  } catch {
+    setStatus("Couldn’t load options.");
+  }
+}
+
 async function openAgentChipOptionsFromCog() {
   setStatus("");
   initAgentOptionsPanel();
@@ -688,6 +879,92 @@ async function openAgentChipOptionsFromCog() {
     if (range) range.value = String(v);
     if (out) out.textContent = String(v);
     setAgentOptionsOpen(true, { animate: true });
+  } catch {
+    setStatus("Couldn’t load options.");
+  }
+}
+
+let advancedFiltersOptionsInited = false;
+function initAdvancedNexviaFiltersOptionsPanel() {
+  if (advancedFiltersOptionsInited) return;
+  advancedFiltersOptionsInited = true;
+  const back = document.getElementById("advFiltersOptsBack");
+  const close = document.getElementById("advFiltersOptsClose");
+  const mapChk = document.getElementById("advFiltersMapViewChk");
+  const goBack = () => {
+    setAdvancedNexviaFiltersOptionsOpen(false, { animate: true });
+    setStatus("");
+  };
+  back?.addEventListener("click", goBack);
+  close?.addEventListener("click", goBack);
+  const reloadNexviaBuyRentIfMatch = async () => {
+    const tab = await getActiveTab();
+    if (tab?.id && /https:\/\/www\.nexvia\.lu\/(?:[\w-]+\/)?(buy|rent)/i.test(tab.url || "")) {
+      await chrome.tabs.reload(tab.id);
+      setStatus("Refreshed the page so filter options take effect.");
+    }
+  };
+  mapChk?.addEventListener("change", async () => {
+    setStatus("");
+    try {
+      await chrome.storage.sync.set({ [NEXVIA_MAP_VIEW_OPTION_KEY]: mapChk.checked });
+      await reloadNexviaBuyRentIfMatch();
+    } catch {
+      setStatus("Couldn’t save option.");
+    }
+  });
+  const sortChk = document.getElementById("advFiltersEnableSortingChk");
+  sortChk?.addEventListener("change", async () => {
+    setStatus("");
+    try {
+      await chrome.storage.sync.set({ [ENABLE_NEXVIA_SORTING_KEY]: sortChk.checked });
+      await reloadNexviaBuyRentIfMatch();
+    } catch {
+      setStatus("Couldn’t save option.");
+    }
+  });
+  const clusterRange = document.getElementById("advFiltersMapClusterRange");
+  const clusterOut = document.getElementById("advFiltersMapClusterValue");
+  const syncClusterRangeOutput = () => {
+    if (!clusterRange || !clusterOut) return;
+    const v = Math.min(100, Math.max(0, parseInt(String(clusterRange.value), 10) || 0));
+    clusterOut.textContent = String(v);
+  };
+  clusterRange?.addEventListener("input", syncClusterRangeOutput);
+  clusterRange?.addEventListener("change", async () => {
+    setStatus("");
+    try {
+      const v = Math.min(100, Math.max(0, parseInt(String(clusterRange?.value), 10) || 0));
+      await chrome.storage.sync.set({ [MAP_CLUSTER_FLEX_KEY]: v });
+      syncClusterRangeOutput();
+      setStatus("Clustering saved. Open map view updates automatically.");
+    } catch {
+      setStatus("Couldn’t save clustering.");
+    }
+  });
+}
+
+async function openAdvancedNexviaFiltersOptionsFromCog() {
+  setStatus("");
+  initAdvancedNexviaFiltersOptionsPanel();
+  const mapChk = document.getElementById("advFiltersMapViewChk");
+  const sortChk = document.getElementById("advFiltersEnableSortingChk");
+  const clusterRange = document.getElementById("advFiltersMapClusterRange");
+  const clusterOut = document.getElementById("advFiltersMapClusterValue");
+  try {
+    const r = await chrome.storage.sync.get({
+      [NEXVIA_MAP_VIEW_OPTION_KEY]: true,
+      [ENABLE_NEXVIA_SORTING_KEY]: true,
+      [MAP_CLUSTER_FLEX_KEY]: MAP_CLUSTER_FLEX_DEFAULT,
+    });
+    if (mapChk) mapChk.checked = r[NEXVIA_MAP_VIEW_OPTION_KEY] !== false;
+    if (sortChk) sortChk.checked = r[ENABLE_NEXVIA_SORTING_KEY] !== false;
+    if (clusterRange) {
+      const cv = Math.min(100, Math.max(0, parseInt(String(r[MAP_CLUSTER_FLEX_KEY]), 10) || MAP_CLUSTER_FLEX_DEFAULT));
+      clusterRange.value = String(cv);
+    }
+    if (clusterOut && clusterRange) clusterOut.textContent = clusterRange.value;
+    setAdvancedNexviaFiltersOptionsOpen(true, { animate: true });
   } catch {
     setStatus("Couldn’t load options.");
   }
@@ -968,12 +1245,16 @@ function renderToolRow(tool, enabled, pageUrl, masterOn) {
     cogBtn.appendChild(cogIcon());
     const ariaOpts =
       tool.id === "easyCleaner"
-        ? "Easy Cleaner: hidden paths, Save, and on-page show/hide (Start editing / Apply and exit)"
+        ? "Interface Cleaner: hidden paths, Save, and on-page show/hide (Start editing / Apply and exit)"
         : tool.id === "listingCreator"
           ? "Easy Listing Creator: load or clear JSON in page storage (bypass)"
-          : tool.id === "easyReferenceInsert"
-            ? "Easy Description Helper: per-rule text fixes (URL, dashes, …)"
-            : "Options";
+          : tool.id === "advancedNexviaFilters"
+            ? "Advanced Filters: map view and related options"
+            : tool.id === "easyReferenceInsert"
+              ? "Description Helper: per-rule text fixes (URL, dashes, …)"
+              : tool.id === "continuousAdBudgetWarning"
+                ? "Meta Adcheck"
+                : "Options";
     cogBtn.setAttribute("aria-label", ariaOpts);
     cogBtn.disabled = optionsCogDisabled;
     if (!masterOn) {
@@ -984,9 +1265,13 @@ function renderToolRow(tool, enabled, pageUrl, masterOn) {
           ? "Paths, save, and on-page +/−. You can open from any tab; load/save when an Easy site is active."
           : tool.id === "listingCreator"
             ? "Read or load listing JSON. Open a nexvia1832 Easy tab to load from the page, or prepare JSON here any time."
-            : tool.id === "easyReferenceInsert"
-              ? "Toggles for URL in description and dash fixes (works from any tab)"
-              : "Adviser pill size (Nexvia listings); same options from any tab";
+            : tool.id === "advancedNexviaFilters"
+              ? "Map view on buy search and other filter options"
+              : tool.id === "easyReferenceInsert"
+                ? "Toggles for URL in description and dash fixes (works from any tab)"
+                : tool.id === "continuousAdBudgetWarning"
+                  ? "Meta Adcheck"
+                  : "Adviser pill size (Nexvia listings); same options from any tab";
     }
     cogBtn.addEventListener("click", async () => {
       setStatus("");
@@ -997,8 +1282,12 @@ function renderToolRow(tool, enabled, pageUrl, masterOn) {
         await openListingCreatorOptionsFromCog();
       } else if (tool.id === "agentChip") {
         await openAgentChipOptionsFromCog();
+      } else if (tool.id === "advancedNexviaFilters") {
+        await openAdvancedNexviaFiltersOptionsFromCog();
       } else if (tool.id === "easyReferenceInsert") {
         await openEasyRefInsertOptionsFromCog();
+      } else if (tool.id === "continuousAdBudgetWarning") {
+        await openMetaAdcheckOptionsFromCog();
       }
     });
     actionEls.push(cogBtn);
@@ -1019,14 +1308,13 @@ function renderToolRow(tool, enabled, pageUrl, masterOn) {
     await setToolStates({ [tool.key]: newEnabled });
     const activeTab = await getActiveTab();
     const pageUrl = activeTab?.url || "";
-    // Content scripts only see the toggle on load; re-run them by refreshing the
-    // active tab when it matches this enhancement (Agent Chip, Easy Cleaner, …).
-    let reloadedForEnhancement = false;
-    if (isEnhancementTool(tool)) {
+    // Content scripts load with the page; refresh the tab when it matches this tool’s sites.
+    let reloadedForToolToggle = false;
+    if (isPopupToggleTool(tool)) {
       try {
         if (activeTab?.id && isToolRelevantOnPage(tool, pageUrl)) {
           await chrome.tabs.reload(activeTab.id);
-          reloadedForEnhancement = true;
+          reloadedForToolToggle = true;
         }
       } catch {
         // e.g. restricted URL, or reload not allowed
@@ -1036,7 +1324,7 @@ function renderToolRow(tool, enabled, pageUrl, masterOn) {
     if (row) {
       updateToolRowAfterToggle(row, tool, newEnabled, pageUrl, masterOn);
     }
-    if (reloadedForEnhancement) {
+    if (reloadedForToolToggle) {
       setStatus("Refreshed the page so this change takes effect.");
       queueSyncPopupHeightToMaxTab();
     }
@@ -1046,45 +1334,52 @@ function renderToolRow(tool, enabled, pageUrl, masterOn) {
 }
 
 /**
- * @param {"assist"|"enhancements"|"settings"} tab
- * @param {{ persist?: boolean }} [opts] If `persist: false`, do not update stored "last tab" (e.g. opening on a fixed tab should not erase memory of Enhance for "last tab" mode).
+ * @param {"assist"|"nexvia-enhance"|"web-enhance"|"settings"|"enhancements"} tab `enhancements` is legacy and maps to nexvia-enhance.
+ * @param {{ persist?: boolean }} [opts] If `persist: false`, do not update stored "last tab" (e.g. opening on a fixed tab should not erase memory for "last tab" mode).
  */
 function setTab(tab, opts = {}) {
   const persist = opts.persist !== false;
+  tab = canonicalizeMainTab(tab);
   const isAssist = tab === "assist";
-  const isEnhancements = tab === "enhancements";
+  const isNexviaEnhance = tab === "nexvia-enhance";
+  const isWebEnhance = tab === "web-enhance";
   const isSettings = tab === "settings";
   const tabbar = document.getElementById("nexpilotTabbar");
   if (tabbar) {
-    tabbar.setAttribute(
-      "data-active",
-      isAssist ? "assist" : isEnhancements ? "enhancements" : "settings"
-    );
+    tabbar.setAttribute("data-active", tab);
   }
   document.getElementById("tabAssist")?.classList.toggle("is-active", isAssist);
-  document.getElementById("tabEnhancements")?.classList.toggle("is-active", isEnhancements);
+  document.getElementById("tabNexviaEnhance")?.classList.toggle("is-active", isNexviaEnhance);
+  document.getElementById("tabWebEnhance")?.classList.toggle("is-active", isWebEnhance);
   document.getElementById("tabSettings")?.classList.toggle("is-active", isSettings);
   document.getElementById("tabAssist")?.setAttribute("aria-selected", isAssist ? "true" : "false");
-  document.getElementById("tabEnhancements")?.setAttribute("aria-selected", isEnhancements ? "true" : "false");
+  document.getElementById("tabNexviaEnhance")?.setAttribute("aria-selected", isNexviaEnhance ? "true" : "false");
+  document.getElementById("tabWebEnhance")?.setAttribute("aria-selected", isWebEnhance ? "true" : "false");
   document.getElementById("tabSettings")?.setAttribute("aria-selected", isSettings ? "true" : "false");
 
   const pa = document.getElementById("panelAssist");
-  const pe = document.getElementById("panelEnhancements");
+  const pn = document.getElementById("panelNexviaEnhance");
+  const pw = document.getElementById("panelWebEnhance");
   const ps = document.getElementById("panelSettings");
   if (pa) pa.hidden = !isAssist;
-  if (pe) pe.hidden = !isEnhancements;
+  if (pn) pn.hidden = !isNexviaEnhance;
+  if (pw) pw.hidden = !isWebEnhance;
   if (ps) ps.hidden = !isSettings;
   const rootTitle = document.getElementById("rootTitle");
   const rootSubtitle = document.getElementById("rootSubtitle");
   if (rootTitle) {
     if (isAssist) rootTitle.textContent = "Assist";
-    else if (isEnhancements) rootTitle.textContent = "Enhancements";
+    else if (isNexviaEnhance) rootTitle.textContent = "Nexvia.lu";
+    else if (isWebEnhance) rootTitle.textContent = "Easy";
     else rootTitle.textContent = "Settings";
   }
   if (rootSubtitle) {
     if (isAssist) rootSubtitle.textContent = "Active workflows and actions";
-    else if (isEnhancements) rootSubtitle.textContent = "Page improvements";
-    else rootSubtitle.textContent = "Extension preferences and version";
+    else if (isNexviaEnhance) {
+      rootSubtitle.textContent = "Website improvements and features";
+    } else if (isWebEnhance) {
+      rootSubtitle.textContent = "Improved Easy website features";
+    } else rootSubtitle.textContent = "Extension preferences and version";
   }
 
   if (persist) {
@@ -1351,7 +1646,7 @@ function initSettingsPanelOnce() {
   const openOn = document.getElementById("npPopupStartTab");
   if (openOn) {
     openOn.addEventListener("change", async () => {
-      const v = openOn.value;
+      const v = canonicalizeMainTab(openOn.value);
       if (!isValidOpenPref(v)) return;
       setStatus("");
       try {
@@ -1367,9 +1662,11 @@ function initSettingsPanelOnce() {
 
 async function render() {
   const tools = document.getElementById("tools");
-  const cleaners = document.getElementById("cleaners");
+  const nexviaEnhancementsTools = document.getElementById("nexviaEnhancementsTools");
+  const webEnhancementsTools = document.getElementById("webEnhancementsTools");
   tools.innerHTML = "";
-  cleaners.innerHTML = "";
+  if (nexviaEnhancementsTools) nexviaEnhancementsTools.innerHTML = "";
+  if (webEnhancementsTools) webEnhancementsTools.innerHTML = "";
 
   const activeTab = await getActiveTab();
   const pageUrl = activeTab?.url || "";
@@ -1386,20 +1683,38 @@ async function render() {
     [NP_POPUP_LAST_TAB_KEY]: "assist"
   });
   const startPref = startPrefs[NP_POPUP_START_KEY];
-  const startNorm = isValidOpenPref(startPref) ? startPref : "last";
+  let startNorm = isValidOpenPref(startPref) ? startPref : "last";
+  if (startNorm !== "last") {
+    startNorm = canonicalizeMainTab(startNorm);
+  }
   const openOnEl = document.getElementById("npPopupStartTab");
   if (openOnEl) {
     openOnEl.value = startNorm;
+    if (startNorm !== "last" && openOnEl.value !== startNorm) {
+      openOnEl.value = "last";
+    }
+  }
+  if (startPref === "enhancements") {
+    try {
+      await chrome.storage.sync.set({ [NP_POPUP_START_KEY]: "nexvia-enhance" });
+    } catch {
+      // ignore
+    }
   }
 
   ASSIST.forEach((tool) => tools.appendChild(renderToolRow(tool, states[tool.key], pageUrl, masterOn)));
-  ENHANCEMENTS.forEach((tool) => cleaners.appendChild(renderToolRow(tool, states[tool.key], pageUrl, masterOn)));
+  NEXVIA_ENHANCEMENTS.forEach((tool) =>
+    nexviaEnhancementsTools?.appendChild(renderToolRow(tool, states[tool.key], pageUrl, masterOn))
+  );
+  OTHER_ENHANCEMENTS.forEach((tool) =>
+    webEnhancementsTools?.appendChild(renderToolRow(tool, states[tool.key], pageUrl, masterOn))
+  );
 
   if (!popupInitialTabSet) {
     popupInitialTabSet = true;
     const last = startPrefs[NP_POPUP_LAST_TAB_KEY];
     if (startNorm === "last") {
-      setTab(isValidLastTab(last) ? last : "assist", { persist: true });
+      setTab(isValidLastTab(last) ? canonicalizeMainTab(last) : "assist", { persist: true });
     } else {
       setTab(startNorm, { persist: false });
     }
@@ -1408,8 +1723,11 @@ async function render() {
   document.getElementById("tabAssist").onclick = () => {
     setTab("assist");
   };
-  document.getElementById("tabEnhancements").onclick = () => {
-    setTab("enhancements");
+  document.getElementById("tabNexviaEnhance").onclick = () => {
+    setTab("nexvia-enhance");
+  };
+  document.getElementById("tabWebEnhance").onclick = () => {
+    setTab("web-enhance");
   };
   const ts = document.getElementById("tabSettings");
   if (ts) {

@@ -17,7 +17,15 @@ export const TOOL_REGISTRY = [
   },
   {
     key: "tool.addAgentToNexviaSite",
-    test: (u) => /https:\/\/www\.nexvia\.lu\/(buy|rent)/i.test(u)
+    test: (u) => /https:\/\/www\.nexvia\.lu\/(?:[\w-]+\/)?(buy|rent)/i.test(u)
+  },
+  {
+    key: "tool.advancedNexviaFilters",
+    test: (u) => /https:\/\/www\.nexvia\.lu\/(?:[\w-]+\/)?(buy|rent)/i.test(u)
+  },
+  {
+    key: "tool.modernPropertyCards",
+    test: (u) => /https:\/\/www\.nexvia\.lu\/(?:[\w-]+\/)?(buy|rent)/i.test(u)
   },
   {
     key: "tool.easyUiCleanerV321",

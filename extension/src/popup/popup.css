@@ -13,7 +13,7 @@
   --nn-radius: 0px;
   --nn-radius-sm: 0px;
   --nn-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
-  /* Set by syncPopupHeightToMaxTab() in popup.js: padding + max(Assist, Enhance, Settings) body height */
+  /* Set by syncPopupHeightToMaxTab() in popup.js: padding + max(Assist, Nexvia, Easy, Settings) body height */
   --nn-main-body-content-min-px: 200px;
 }
 
@@ -36,7 +36,7 @@ html {
 
 body {
   /* Wider so tool names + descriptions + toggles don’t feel cramped */
-  width: 520px;
+  width: 560px;
   box-sizing: border-box;
   min-height: 0;
   height: auto;
@@ -206,7 +206,7 @@ body {
   align-items: stretch;
   align-self: stretch;
   gap: 0;
-  min-height: 58px;
+  min-height: 60px;
   box-sizing: border-box;
   border: 0;
   border-bottom: 1px solid var(--nn-border);
@@ -222,7 +222,7 @@ body {
   position: absolute;
   bottom: 0;
   left: 0;
-  width: calc(100% / 3);
+  width: calc(100% / 4);
   height: 2px;
   background: var(--nn-green-2, #10a37f);
   border-radius: 1px 1px 0 0;
@@ -235,12 +235,16 @@ body {
   z-index: 1;
 }
 
-.tabbar[data-active="enhancements"] .tabbar-indicator {
+.tabbar[data-active="nexvia-enhance"] .tabbar-indicator {
   transform: translate3d(100%, 0, 0);
 }
 
-.tabbar[data-active="settings"] .tabbar-indicator {
+.tabbar[data-active="web-enhance"] .tabbar-indicator {
   transform: translate3d(200%, 0, 0);
+}
+
+.tabbar[data-active="settings"] .tabbar-indicator {
+  transform: translate3d(300%, 0, 0);
 }
 
 .tab {
@@ -313,6 +317,7 @@ body {
 }
 
 .tools { display: flex; flex-direction: column; gap: 10px; }
+
 .tabpanel[hidden] { display: none; }
 
 .tabpanel--settings .settings-stack {
@@ -551,7 +556,8 @@ label.settings-compact-row {
 }
 
 #panelAssist:not([hidden]),
-#panelEnhancements:not([hidden]),
+#panelNexviaEnhance:not([hidden]),
+#panelWebEnhance:not([hidden]),
 #panelSettings:not([hidden]) {
   animation: nexpilot-tabpanel-in var(--tab-panel) both;
 }
@@ -577,12 +583,14 @@ label.settings-compact-row {
     transition-duration: 0.01s;
   }
   #panelAssist:not([hidden]),
-  #panelEnhancements:not([hidden]),
+  #panelNexviaEnhance:not([hidden]),
+  #panelWebEnhance:not([hidden]),
   #panelSettings:not([hidden]) {
     animation: none;
   }
   #panelAssist .switch .pill,
-  #panelEnhancements .switch .pill {
+  #panelNexviaEnhance .switch .pill,
+  #panelWebEnhance .switch .pill {
     --nn-pill-t: 0.01s;
   }
 }
@@ -653,34 +661,39 @@ label.settings-compact-row {
 }
 
 /*
- * Assist + Enhance: when a per-tool switch is off, the row reads as inactive.
+ * Assist + Nexvia + Easy: when a per-tool switch is off, the row reads as inactive.
  * Inactive styling changes instantly (no row transitions) so only the pill animates
  * and the background does not fight the knob during the same 240ms.
  */
 #panelAssist .tool:has(.switch input:not(:checked)),
-#panelEnhancements .tool:has(.switch input:not(:checked)) {
+#panelNexviaEnhance .tool:has(.switch input:not(:checked)),
+#panelWebEnhance .tool:has(.switch input:not(:checked)) {
   background: rgba(0, 0, 0, 0.2);
   border-color: rgba(255, 255, 255, 0.055);
 }
 
 #panelAssist .tool:has(.switch input:not(:checked)) .tool-lead-icon,
-#panelEnhancements .tool:has(.switch input:not(:checked)) .tool-lead-icon {
+#panelNexviaEnhance .tool:has(.switch input:not(:checked)) .tool-lead-icon,
+#panelWebEnhance .tool:has(.switch input:not(:checked)) .tool-lead-icon {
   color: rgba(255, 255, 255, 0.14);
 }
 
 #panelAssist .tool:has(.switch input:not(:checked)) .tool-name,
-#panelEnhancements .tool:has(.switch input:not(:checked)) .tool-name {
+#panelNexviaEnhance .tool:has(.switch input:not(:checked)) .tool-name,
+#panelWebEnhance .tool:has(.switch input:not(:checked)) .tool-name {
   color: #7d7d7d;
 }
 
 #panelAssist .tool:has(.switch input:not(:checked)) .tool-desc,
-#panelEnhancements .tool:has(.switch input:not(:checked)) .tool-desc {
+#panelNexviaEnhance .tool:has(.switch input:not(:checked)) .tool-desc,
+#panelWebEnhance .tool:has(.switch input:not(:checked)) .tool-desc {
   color: #5e5e5e;
   opacity: 0.9;
 }
 
 #panelAssist .tool:has(.switch input:not(:checked)) .tool-actions,
-#panelEnhancements .tool:has(.switch input:not(:checked)) .tool-actions {
+#panelNexviaEnhance .tool:has(.switch input:not(:checked)) .tool-actions,
+#panelWebEnhance .tool:has(.switch input:not(:checked)) .tool-actions {
   opacity: 0.5;
 }
 
@@ -927,8 +940,33 @@ label.settings-compact-row {
   color: var(--nn-text-dim);
   margin: 0;
 }
+.subview-help code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 10px;
+  color: var(--nn-text);
+}
+.subview-block-desc code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 10px;
+  color: var(--nn-text);
+}
+.subview-text-input {
+  width: 100%;
+  box-sizing: border-box;
+  font: inherit;
+  font-size: 12px;
+  padding: 8px 10px;
+  border: 1px solid var(--nn-border-2);
+  background: var(--nn-panel-2);
+  color: var(--nn-text);
+  border-radius: 6px;
+}
+.subview-text-input:focus {
+  outline: 1px solid rgba(16, 163, 127, 0.45);
+  outline-offset: 0;
+}
 
-/* Easy Cleaner: options + edit in one subview */
+/* Interface Cleaner (Easy): options + edit in one subview */
 .subview-block {
   margin-top: 2px;
   padding-top: 12px;
@@ -1153,9 +1191,10 @@ label.settings-compact-row {
   background: var(--nn-green-2);
 }
 
-/* Per-tool list only (Assist + Enhance): smoother, more visible on/off motion */
+/* Per-tool list only (Assist + enhance tabs): smoother, more visible on/off motion */
 #panelAssist .switch .pill,
-#panelEnhancements .switch .pill {
+#panelNexviaEnhance .switch .pill,
+#panelWebEnhance .switch .pill {
   /* Avoid translateZ/forced layers: they can interact badly with the popup + :has() repaints */
   --nn-pill-t: 0.24s;
   --nn-pill-ease: cubic-bezier(0.4, 0, 0.2, 1);
@@ -1165,7 +1204,8 @@ label.settings-compact-row {
 }
 
 #panelAssist .switch .pill::after,
-#panelEnhancements .switch .pill::after {
+#panelNexviaEnhance .switch .pill::after,
+#panelWebEnhance .switch .pill::after {
   /* Integer px motion only (no % + scale) — avoids 1px/shimmer wobble in flex rows */
   top: 3px;
   left: 3px;
@@ -1175,7 +1215,8 @@ label.settings-compact-row {
 }
 
 #panelAssist .switch input:checked + .pill::after,
-#panelEnhancements .switch input:checked + .pill::after {
+#panelNexviaEnhance .switch input:checked + .pill::after,
+#panelWebEnhance .switch input:checked + .pill::after {
   left: 3px;
   right: auto;
   background: var(--nn-green-2);
@@ -1229,4 +1270,9 @@ label.settings-compact-row {
 .subview-actions--tight {
   padding-top: 4px;
   justify-content: flex-end;
+}
+
+.subview-help--tight {
+  margin-top: 6px;
+  margin-bottom: 6px;
 }

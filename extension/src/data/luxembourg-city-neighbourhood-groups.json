@@ -1,0 +1,67 @@
+{
+  "description": "Human-readable copy of the grouping spec. The extension loads src/data/luxembourg-city-neighbourhood-groups.bundle.js (manifest); edit that file for runtime changes, or edit both and keep them aligned. Each group: label + aliases matching Nexvia text after \"Luxembourg - \".",
+  "groups": [
+    {
+      "label": "Beggen/Eich",
+      "aliases": ["Beggen", "Eich"]
+    },
+    {
+      "label": "Belair/Merl",
+      "aliases": ["Belair", "Merl"]
+    },
+    {
+      "label": "Bonnevoie",
+      "aliases": [
+        "Bonnevoie",
+        "Bonnevoie-Nord",
+        "Bonnevoie-Sud",
+        "Bonnevoie-Est",
+        "Bonnevoie Nord",
+        "Bonnevoie Sud",
+        "Bonnevoie Est",
+        "Verlorenkost",
+        "Verloren Kost"
+      ]
+    },
+    {
+      "label": "Cents/Hamm/Pulvermühle",
+      "aliases": ["Cents", "Hamm", "Pulvermühle", "Pulvermuhle", "Pulvermuehle"]
+    },
+    {
+      "label": "Cessange/Gasperich",
+      "aliases": ["Cessange", "Cessage", "Gasperich"]
+    },
+    {
+      "label": "Clausen/Grund/Pfaffenthal",
+      "aliases": ["Clausen", "Grund", "Pfaffenthal"]
+    },
+    {
+      "label": "Dommeldange/Weimerskirch",
+      "aliases": ["Dommeldange", "Weimerskirch"]
+    },
+    {
+      "label": "Gare/Hollerich",
+      "aliases": ["Gare", "Hollerich"]
+    },
+    {
+      "label": "Kirchberg/Weimershof",
+      "aliases": ["Kirchberg", "Weimershof"]
+    },
+    {
+      "label": "Limpertsberg",
+      "aliases": ["Limpertsberg"]
+    },
+    {
+      "label": "Mühlenbach/Rollingergrund",
+      "aliases": ["Mühlenbach", "Muhlenbach", "Muehlenbach", "Rollingergrund"]
+    },
+    {
+      "label": "Neudorf",
+      "aliases": ["Neudorf"]
+    },
+    {
+      "label": "Ville-Haute",
+      "aliases": ["Ville-Haute", "Ville Haute", "Villehaute"]
+    }
+  ]
+}

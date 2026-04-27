@@ -27,6 +27,7 @@
     "https://*.easy-serveur53.com/*",
     "https://fonts.googleapis.com/*",
     "https://nexvia-connect.github.io/*",
+    "https://*.basemaps.cartocdn.com/*",
     "https://*.s3.amazonaws.com/*",
     "https://*.facebook.com/*",
     "https://facebook.com/*"
@@ -81,11 +82,18 @@
     {
       "matches": [
         "https://www.nexvia.lu/buy*",
-        "https://www.nexvia.lu/rent*"
+        "https://www.nexvia.lu/rent*",
+        "https://www.nexvia.lu/*/buy*",
+        "https://www.nexvia.lu/*/rent*"
       ],
       "js": [
         "src/lib/np-tools-master-gate.js",
-        "src/content/add-agent-to-nexvia-site.js"
+        "src/data/luxembourg-city-neighbourhood-groups.bundle.js",
+        "src/data/outside-municipality-regions.bundle.js",
+        "src/enhancements/advanced-nexvia-filters.js",
+        "src/enhancements/modern-property-cards.js",
+        "src/content/add-agent-to-nexvia-site.js",
+        "src/enhancements/nexvia-map-view.js"
       ],
       "run_at": "document_idle"
     },
